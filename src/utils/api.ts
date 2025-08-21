@@ -203,11 +203,13 @@ export const searchResults = async (searchTerm: string): Promise<Result[]> => {
       .from('reciterResults')
       .select('*')
       .ilike('name', `%${searchTerm.trim()}%`)
-      .order('grade', { ascending: false });
+      .order('grade', { ascending: false })
+      .limit(10);
 
     if (error) throw error;
     
     console.log('Search results:', data);
+    console.log('Search results count:', data?.length || 0);
     
     if (!data || data.length === 0) {
       console.log('No results found for:', searchTerm);
@@ -216,41 +218,58 @@ export const searchResults = async (searchTerm: string): Promise<Result[]> => {
     
     // إضافة الترتيب للنتائج
     const rankedResults = data.map((result, index) => ({
-      ...result,
-      id: result.no, // استخدام العمود no كـ id
+      id: result.no || result.id || index + 1, // استخدام العمود no أو id أو فهرس
       name: result.name || '', // التأكد من وجود الاسم
-      category: result.category?.toString() || '', // تحويل الفئة إلى نص
+      category: result.category?.toString() || 'غير محدد', // تحويل الفئة إلى نص
       grade: result.grade || 0, // التأكد من وجود الدرجة
-      rank: index + 1
+      rank: index + 1,
+      teacher: result.teacher || 'غير محدد'
     }));
     
+    console.log('Processed results:', rankedResults);
     return rankedResults;
   } catch (error) {
     console.error('Error searching results:', error);
-    throw new Error('حدث خطأ أثناء البحث. يرجى المحاولة مرة أخرى.');
+    console.error('Error details:', error);
+    throw new Error(`حدث خطأ أثناء البحث: ${error.message || 'خطأ غير معروف'}`);
   }
 };
 
 // API لجلب جميع النتائج مع الترتيب
 export const getAllResults = async (): Promise<Result[]> => {
   try {
+    console.log('Fetching all results from reciterResults table...');
+    
     const { data, error } = await supabase
       .from('reciterResults')
       .select('*')
-      .order('grade', { ascending: false });
+      .order('grade', { ascending: false })
+      .limit(200);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error:', error);
+      throw error;
+    }
+    
+    console.log('Raw data from Supabase:', data);
+    console.log('Number of records:', data?.length || 0);
     
     // إضافة الترتيب للنتائج
     const rankedResults = (data || []).map((result, index) => ({
-      ...result,
-      id: result.no, // استخدام العمود no كـ id
-      rank: index + 1
+      id: result.no || result.id || index + 1,
+      name: result.name || 'غير محدد',
+      category: result.category?.toString() || 'غير محدد',
+      grade: result.grade || 0,
+      rank: index + 1,
+      no: result.no,
+      teacher: result.teacher || 'غير محدد'
     }));
     
+    console.log('Processed results:', rankedResults);
     return rankedResults;
   } catch (error) {
     console.error('Error fetching all results:', error);
+    console.error('Error details:', error);
     return [];
   }
 };

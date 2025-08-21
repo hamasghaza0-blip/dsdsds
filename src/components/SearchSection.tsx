@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Search, User, AlertTriangle } from 'lucide-react';
 import { Student, Result } from '../types';
 import { searchResults } from '../utils/api';
+import { supabase } from '../utils/supabase';
 
 interface SearchSectionProps {
   students: Student[];
@@ -33,10 +34,25 @@ export default function SearchSection({ students, onSearch, isDarkMode = false }
     
     try {
       console.log('Searching for term:', searchTerm.trim());
+      
+      // إضافة تأخير قصير لإظهار حالة التحميل
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // تجربة البحث المباشر أولاً للتشخيص
+      console.log('Testing direct Supabase connection...');
+      const { data: testData, error: testError } = await supabase
+        .from('reciterResults')
+        .select('*')
+        .limit(5);
+      
+      console.log('Direct test - Data:', testData);
+      console.log('Direct test - Error:', testError);
+      
       const results = await searchResults(searchTerm.trim());
       console.log('Search completed, results:', results);
       
       if (results && results.length > 0) {
+        console.log('Found result:', results[0]);
         onSearch(results[0]); // إرجاع أول نتيجة
       } else {
         console.log('No results found');
@@ -44,7 +60,7 @@ export default function SearchSection({ students, onSearch, isDarkMode = false }
       }
     } catch (error: any) {
       console.error('Search error:', error);
-      setSearchError(error.message || 'حدث خطأ أثناء البحث');
+      setSearchError(error.message || 'حدث خطأ أثناء البحث. تأكد من الاتصال بالإنترنت.');
       onSearch(null);
     } finally {
       setIsLoading(false);

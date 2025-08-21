@@ -3,6 +3,7 @@ import { Student, Result } from '../types';
 import { ChevronDown, ChevronUp, List, Filter, Clock, Calendar, AlertCircle } from 'lucide-react';
 import { getCategoryColor, getGradeColor } from '../utils/contestStats';
 import { getAllResults } from '../utils/api';
+import { supabase } from '../utils/supabase';
 
 interface AllResultsSectionProps {
   students: Student[];
@@ -24,10 +25,36 @@ export const AllResultsSection: React.FC<AllResultsSectionProps> = ({ students, 
   const loadResults = async () => {
     setIsLoading(true);
     try {
+      console.log('Loading all results...');
       const allResults = await getAllResults();
+      console.log('Loaded results:', allResults.length);
       setResults(allResults);
     } catch (error) {
       console.error('Error loading results:', error);
+      // في حالة الخطأ، جرب البحث المباشر
+      try {
+        console.log('Trying direct query...');
+        const { data, error: directError } = await supabase
+          .from('reciterResults')
+          .select('*')
+          .order('grade', { ascending: false })
+          .limit(100);
+        
+        if (!directError && data) {
+          const processedResults = data.map((result, index) => ({
+            id: result.no || result.id || index + 1,
+            name: result.name || 'غير محدد',
+            category: result.category?.toString() || 'غير محدد',
+            grade: result.grade || 0,
+            rank: index + 1,
+            no: result.no
+          }));
+          setResults(processedResults);
+          console.log('Direct query successful:', processedResults.length);
+        }
+      } catch (directError) {
+        console.error('Direct query also failed:', directError);
+      }
     } finally {
       setIsLoading(false);
     }

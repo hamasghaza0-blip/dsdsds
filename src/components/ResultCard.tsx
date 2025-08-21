@@ -73,7 +73,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({ student }) => {
             <User className="w-6 h-6 text-blue-600" />
             <div className="flex-1 text-right">
               <p className="text-sm text-gray-600 mb-1">اسم الطالب</p>
-              <p className="text-xl font-bold text-gray-800">{student.name}</p>
+              <p className="text-xl font-bold text-gray-800">{student.name || 'غير محدد'}</p>
             </div>
           </div>
 
@@ -81,7 +81,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({ student }) => {
             <Hash className="w-6 h-6 text-green-600" />
             <div className="flex-1 text-right">
               <p className="text-sm text-gray-600 mb-1">رقم الطالب</p>
-              <p className="text-xl font-bold text-gray-800">{student.id || student.no || 'غير محدد'}</p>
+              <p className="text-xl font-bold text-gray-800">{student.no || student.id || 'غير محدد'}</p>
             </div>
           </div>
 
@@ -94,7 +94,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({ student }) => {
                   student.category?.toString() || 'غير محدد'
                 )}`}
               >
-                {student.category || 'غير محدد'}
+                {student.category?.toString() || 'غير محدد'}
               </span>
             </div>
           </div>
@@ -106,10 +106,10 @@ export const ResultCard: React.FC<ResultCardProps> = ({ student }) => {
               <div className="flex items-center justify-end gap-2">
                 <span
                   className={`text-3xl font-bold px-4 py-2 rounded-lg ${getGradeColor(
-                    student.grade
+                    student.grade || 0
                   )}`}
                 >
-                  {student.grade}
+                  {student.grade || 0}
                 </span>
                 <span className="text-lg text-gray-600">من 100</span>
               </div>
